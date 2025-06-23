@@ -79,7 +79,7 @@ const Navbar = ({
 
   return (
     <>
-      <header className="fixed top-0 w-full z-70 bg-[#fff] border border-[#E0E0E0]">
+      <header className="fixed top-0 w-full z-80 bg-[#fff] border border-[#E0E0E0]">
         <nav className="grid md:grid-cols-2 items-center px-8 w-full h-full gap-4 relative">
           <div className="uppercase tracking-widest cursor-pointer">Logo</div>
 
@@ -140,7 +140,7 @@ const Navbar = ({
       {/* Profile Dropdown Panel */}
       <div
         ref={profileRef}
-        className={`fixed right-0 top-[35px] w-[250px] bg-[#fff] border py-4 border-[#E0E0E0] shadow-md transform transition-all duration-300 ease-out ${
+        className={`fixed right-0 top-[35px] w-[250px] bg-[#fff] z-50 border py-4 border-[#E0E0E0] shadow-md transform transition-all duration-300 ease-out ${
           showProfile ? "translate-y-0 z-60" : "-translate-y-full z-50"
         }`}
       >
