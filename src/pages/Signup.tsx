@@ -48,9 +48,9 @@ const Signup = () => {
 
   return (
     <div className="h-screen w-full flex items-center justify-center">
-      <div className="h-full flex flex-col md:flex-row w-full overflow-hidden">
+      <div className="h-full md:flex flex-col md:flex-row w-full overflow-hidden">
         {/* Left side */}
-        <div className="w-full md:w-[60%] relative order-2">
+        <div className="hidden md:block w-full md:w-[60%] relative order-2">
           <img
             src={lavenderImg}
             alt="Login Visual"
@@ -65,7 +65,7 @@ const Signup = () => {
         </div>
 
         {/* Right side */}
-        <div className="w-full h-full md:w-[40%] p-10 border border-[#E0E0E0]">
+        <div className="w-full h-full md:w-[40%] p-4 md:p-10 border border-[#E0E0E0]">
           {errorMsg && (
             <div className="text-red-500 text-sm mb-4">{errorMsg}</div>
           )}
@@ -75,7 +75,9 @@ const Signup = () => {
             onSubmit={handleSignup}
           >
             <div>
-              <h2 className="text-3xl mb-2">Create an account</h2>
+              <h2 className="text-[27px] md:text-[30px] mb-2">
+                Create an account
+              </h2>
               <div className="mb-6 text-sm font-normal gap-2 flex flex-row items-center">
                 <p>Already have an account?</p>
                 <Link
@@ -125,12 +127,16 @@ const Signup = () => {
               </span>
             </div>
 
-            <label className="flex items-center font-normal text-sm gap-2">
-              <input type="checkbox" className="text-[#494848]" required />
-              <span className="text-[#494848]">I agree to the</span>
+            <label className="flex items-center justify-between font-normal text-sm gap-2">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" className="text-[#494848]" required />
+                <span className="text-[#494848] text-[12px] md:text-[14px]">
+                  I agree to the
+                </span>
+              </div>
               <a
                 href="#"
-                className="text-[#494848] font-semibold hover:underline"
+                className="text-[#494848] font-semibold hover:underline text-[12px] md:text-[14px]"
               >
                 Terms & Conditions
               </a>

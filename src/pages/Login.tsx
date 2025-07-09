@@ -86,9 +86,9 @@ const Login = () => {
         </div>
       )}
 
-      <div className="h-full flex flex-col md:flex-row w-full overflow-hidden">
+      <div className="h-full md:flex flex-col md:flex-row w-full overflow-hidden">
         {/* left side */}
-        <div className="w-full md:w-[60%] relative order-2">
+        <div className="hidden md:block w-full md:w-[60%] relative order-2">
           <img
             src={lavenderImg}
             alt="Login Visual"
@@ -103,7 +103,7 @@ const Login = () => {
         </div>
 
         {/* right side */}
-        <div className="w-full h-full md:w-[40%] p-10 border border-[#E0E0E0]">
+        <div className="w-full h-full md:w-[40%] p-4 md:p-10 border border-[#E0E0E0]">
           <div className="h-full">
             <form
               onSubmit={handleLogin}
@@ -151,9 +151,14 @@ const Login = () => {
               <label className="flex items-center justify-between font-normal text-sm gap-2">
                 <div className="flex items-center gap-2">
                   <input type="checkbox" className="text-[#494848]" />
-                  <span className="text-[#494848]">Remember me?</span>
+                  <span className="text-[#494848] text-[12px] md:text-[14px]">
+                    Remember me?
+                  </span>
                 </div>
-                <a href="#" className="text-[#494848] hover:underline">
+                <a
+                  href="#"
+                  className="text-[#494848] text-[12px] md:text-[14px] hover:underline"
+                >
                   Forgot Password?
                 </a>
               </label>

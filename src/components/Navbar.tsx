@@ -64,19 +64,19 @@ const Navbar = () => {
   return (
     <>
       <header className="fixed top-0 w-full z-80 bg-[#fff] border border-[#E0E0E0]">
-        <nav className="grid md:grid-cols-2 items-center px-8 w-full h-full gap-4 relative">
+        <nav className="grid grid-cols-2 items-center px-8 w-full h-full gap-4 relative">
           <div className="uppercase tracking-widest cursor-pointer">Logo</div>
           <div className="justify-self-end relative">
             <div className="flex items-center">
               <div className="border border-[#E0E0E0] bg rounded-4xl">
                 <button
                   onClick={() => dispatch(createBlog())}
-                  className="px-3 py-2 rounded cursor-pointer hover:rounded-full hover:text-white hover:bg-black transition-all flex items-center gap-2 text-xs font-[500]"
+                  className="px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer hover:rounded-full hover:text-white hover:bg-black transition-all flex items-center gap-2 text-xs font-[500]"
                 >
                   <div className="flex items-center">
                     <i className="fa-regular fa-plus text-[10px]"></i>
                   </div>
-                  <p>Create Blog</p>
+                  <p className="text-[10px] md:text-[12px]">Create Blog</p>
                 </button>
               </div>
               <div>
@@ -85,11 +85,6 @@ const Navbar = () => {
                   onClick={() => setShowProfile((prev) => !prev)}
                 >
                   <i className="fa-regular fa-user"></i>
-                </button>
-              </div>
-              <div className="block md:hidden">
-                <button className="block md:hidden">
-                  <i className="fa-solid fa-bars"></i>
                 </button>
               </div>
             </div>
