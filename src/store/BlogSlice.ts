@@ -1,125 +1,67 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
-import { supabase } from "../utils/Supabase";
+// features/user/userSlice.ts
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-// --- Types ---
 export interface BlogPost {
   id: number;
   title: string;
-  author: string;
   category: string;
   description: string;
   created_at: string;
   user_id: string;
+  email: string;
 }
+
 
 interface BlogState {
   blogs: BlogPost[];
+  mode: "create" | "edit" | "delete" | null;
   loading: boolean;
   editBlog: BlogPost | null;
-  hasMore: boolean;
+  deleteBlog: BlogPost | null;
+  blogSubmitted: boolean;
 }
 
-// --- Initial State ---
 const initialState: BlogState = {
   blogs: [],
+  mode: null,
   loading: false,
   editBlog: null,
-  hasMore: false,
-
+  deleteBlog: null,
+  blogSubmitted: false,
 };
 
-export const fetchBlogs = createAsyncThunk<
-  { blogs: BlogPost[]; hasMore: boolean },
-  number
->("blog/fetchAll", async (page) => {
-  const limit = 4;
-  const from = (page - 1) * limit;
-  const to = from + limit;
-
-  const { data, count, error } = await supabase
-    .from("blog_list")
-    .select("*", { count: "exact" }) 
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  if (error) throw error;
-
-  const hasMore = !!count && to + 1 < count;
-
-  return { blogs: data as BlogPost[], hasMore };
-});
-
-
-
-export const deleteBlog = createAsyncThunk<
-  number,
-  { id: number; user_id: string }
->("blog/delete", async (blog) => {
-  const { error } = await supabase
-    .from("blog_list")
-    .delete()
-    .eq("id", blog.id)
-    .eq("user_id", blog.user_id);
-
-  if (error) throw error;
-  return blog.id;
-});
-
-
-export const createBlog = createAsyncThunk(
-  "blog/create",
-  async (blogData: BlogPost) => {
-    const { error } = await supabase.from("blog_list").insert([blogData]);
-    if (error) throw error;
-    return blogData;
-  }
-);
-
-export const updateBlog = createAsyncThunk(
-  "blog/update",
-  async (blogData: BlogPost) => {
-    const { error } = await supabase
-      .from("blog_list")
-      .update(blogData)
-      .eq("id", blogData.id)
-      .eq("user_id", blogData.user_id);
-
-    if (error) throw error;
-    return blogData;
-  }
-);
-
-
-// --- Slice ---
-const blogSlice = createSlice({
+const userSlice = createSlice({
   name: "blog",
   initialState,
   reducers: {
-    setEditBlog: (state, action: PayloadAction<BlogPost>) => {
+    createBlog: (state) => {
+      state.mode = "create";
+    },
+    editBlog: (state, action: PayloadAction<BlogPost>) => {
+      state.mode = "edit";
       state.editBlog = action.payload;
     },
-    clearEditBlog: (state) => {
-      state.editBlog = null;
+    deleteBlog: (state, action: PayloadAction<BlogPost>) => {
+      state.mode = "delete";
+      state.deleteBlog = action.payload;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchBlogs.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchBlogs.fulfilled, (state, action) => {
-  state.blogs = action.payload.blogs;
-  state.loading = false;
-  state.hasMore = action.payload.hasMore; 
-})
-
-      .addCase(deleteBlog.fulfilled, (state, action: PayloadAction<number>) => {
-        state.blogs = state.blogs.filter((b) => b.id !== action.payload);
-      });
-  },
+   submitBlog(state) {
+      state.blogSubmitted = !state.blogSubmitted; // toggle to trigger useEffect
+      state.mode = null; // close panel after submission
+      state.editBlog = null;
+      state.deleteBlog = null;
+    },
+    setMode: (state, action: PayloadAction<"create" | "edit" | null>) => {
+      state.mode = action.payload;
+    }, 
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    }, 
+    setBlogs: (state, action: PayloadAction<BlogPost[]>) => {
+      state.blogs = action.payload;
+    },
+}
 });
 
-// --- Exports ---
-export const { setEditBlog, clearEditBlog } = blogSlice.actions;
-export default blogSlice.reducer;
+export const { createBlog, editBlog, deleteBlog, submitBlog, setMode, setLoading, setBlogs } = userSlice.actions;
+export default userSlice.reducer;

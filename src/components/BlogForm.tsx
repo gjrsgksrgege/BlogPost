@@ -1,115 +1,123 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../utils/Supabase";
+import { useDispatch, useSelector } from "react-redux";
+import { submitBlog } from "../store/BlogSlice";
+import type { RootState } from "../store/store";
 
 interface BlogFormProps {
-  mode: "create" | "edit";
-  initialData?: {
-    title?: string;
-    author?: string;
-    category?: string;
-    description?: string;
-    created_at?: string;
-  };
-  onSubmit: (data: any) => void;
-  onCancel?: () => void;
+  mode: "create" | "edit" | "delete";
 }
 
-const BlogForm = ({ mode, initialData = {}, onSubmit }: BlogFormProps) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    category: "",
-    description: "",
-    created_at: "",
-    ...initialData,
-  });
+const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
+  const dispatch = useDispatch();
+  const editBlog = useSelector((state: RootState) => state.blog.editBlog);
 
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+
+  // Prefill form fields when editing
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      ...initialData,
-      created_at:
-        mode === "create"
-          ? new Date().toISOString()
-          : initialData.created_at || "",
-    }));
-  }, [initialData, mode]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    if (mode === "edit" && editBlog) {
+      setTitle(editBlog.title);
+      setDescription(editBlog.description);
+      setCategory(editBlog.category);
+    } else {
+      setTitle("");
+      setDescription("");
+      setCategory("");
+    }
+  }, [mode, editBlog]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      await onSubmit(formData);
-      setFormData({
-        title: "",
-        author: "",
-        category: "",
-        description: "",
-        created_at: "",
-      });
-    } catch (err) {
-      console.error("Form submit error:", err);
+    const user = (await supabase.auth.getUser()).data.user;
+
+    if (mode === "edit" && editBlog) {
+      // ✏️ UPDATE logic
+      const { data, error } = await supabase
+        .from("blog_list")
+        .update({
+          title,
+          description,
+          category,
+        })
+        .eq("id", editBlog.id);
+
+      if (error) {
+        console.error("Update error:", error.message);
+      } else {
+        console.log("Update success:", data);
+        dispatch(submitBlog());
+      }
+    } else {
+      const { data, error } = await supabase.from("blog_list").insert([
+        {
+          title,
+          category,
+          description,
+          user_id: user?.id,
+          email: user?.email,
+        },
+      ]);
+
+      if (error) {
+        console.error("Insert error:", error.message);
+      } else {
+        console.log("Insert success:", data);
+        dispatch(submitBlog());
+      }
     }
+
+    setTitle("");
+    setDescription("");
+    setCategory("");
   };
 
   return (
-    <section
-      id="blog-form"
-      className="space-y-10 flex flex-col justify-between mx-auto px-[30px] lg:px-[0px]"
-    >
-      <h2 className="text-[22px] font-bold text-[#333333] text-left">
-        {mode === "edit" ? "Edit Blog Post" : "Create New Blog Post"}
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <h2 className="text-xl font-semibold">
+        {mode === "create" ? "Create New Blog" : "Edit Blog"}
       </h2>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 leading-relaxed overflow-hidden text-left md:text-justify"
+      <input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="block w-full border p-2 rounded"
+        required
+      />
+      <textarea
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="block w-full h-40 border p-2 rounded"
+        required
+      />
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="block w-full border p-2 rounded text-gray-500"
+        required
       >
-        {["title", "author", "category"].map((field) => (
-          <div className="" key={field}>
-            <label className="text-gray-400 block mb-2 font-semibold capitalize">
-              {field}
-            </label>
-            <input
-              type="text"
-              name={field}
-              value={(formData as any)[field]}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-4 py-2"
-              required
-            />
-          </div>
-        ))}
+        <option value="" disabled>
+          Feelings
+        </option>
+        <option value="happy">Happy</option>
+        <option value="sad">Sad</option>
+        <option value="anger">Anger</option>
+        <option value="fear">Fear</option>
+      </select>
 
-        <div className="">
-          <label className="text-gray-400 block mb-2 font-semibold">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={5}
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          />
-        </div>
-
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            className="px-6 py-3 rounded bg-black text-white hover:bg-gray-800 transition"
-          >
-            {mode === "edit" ? "Update" : "Publish"}
-          </button>
-        </div>
-      </form>
-    </section>
+      <button
+        type="submit"
+        className="bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        {mode === "create" ? "Publish" : "Update"}
+      </button>
+    </form>
   );
 };
 

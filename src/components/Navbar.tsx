@@ -1,71 +1,55 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { createBlog, setMode } from "../store/BlogSlice";
+import BlogForm from "./BlogForm";
+import type { RootState } from "../store/store";
 import { supabase } from "../utils/Supabase";
-import BlogForm from "../components/BlogForm";
+import { useNavigate } from "react-router-dom";
 
-interface BlogPost {
-  id: number;
-  title: string;
-  author: string;
-  category: string;
-  description: string;
-  created_at: string;
-  user_id: string;
-}
-
-interface NavbarProps {
-  mode: "create" | "edit";
-  editBlog: BlogPost | null;
-  onSubmitBlog: (data: any) => void;
-  onCancel: () => void;
-  showCreate: "side" | null;
-  setShowCreate: React.Dispatch<React.SetStateAction<"side" | null>>;
-  setEditBlog: (blog: BlogPost | null) => void;
-  setMode: React.Dispatch<React.SetStateAction<"create" | "edit">>;
-  setToastMode: React.Dispatch<
-    React.SetStateAction<"create" | "edit" | "delete">
-  >;
-}
-
-const Navbar = ({
-  mode,
-  editBlog,
-  onSubmitBlog,
-  onCancel,
-  showCreate,
-  setShowCreate,
-  setEditBlog,
-  setMode,
-  setToastMode,
-}: NavbarProps) => {
-  const [showProfile, setShowProfile] = useState<"side" | null>(null);
-
-  const profileRef = useRef<HTMLDivElement | null>(null);
-  const sidePanelRef = useRef<HTMLDivElement | null>(null);
-  const sideCreatePanelRef = useRef<HTMLDivElement | null>(null);
-  const sideCreate2PanelRef = useRef<HTMLDivElement | null>(null);
-
+const Navbar = () => {
+  const mode = useSelector((state: RootState) => state.blog.mode);
+  const dispatch = useDispatch();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
+    setShowCreate(mode === "create");
 
-      const clickedOutsideProfile =
-        !sidePanelRef.current?.contains(target) &&
-        !profileRef.current?.contains(target);
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
 
-      const clickedOutsideCreate =
-        !sideCreatePanelRef.current?.contains(target) &&
-        !sideCreate2PanelRef.current?.contains(target);
+      if (panelRef.current && !panelRef.current.contains(target)) {
+        dispatch(setMode(null));
+      }
+    };
 
-      if (clickedOutsideProfile) setShowProfile(null);
-      if (clickedOutsideCreate) setShowCreate(null);
+    if (mode === "create") {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mode, dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (profileRef.current && !profileRef.current.contains(target)) {
+        setShowProfile(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dispatch]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -82,25 +66,12 @@ const Navbar = ({
       <header className="fixed top-0 w-full z-80 bg-[#fff] border border-[#E0E0E0]">
         <nav className="grid md:grid-cols-2 items-center px-8 w-full h-full gap-4 relative">
           <div className="uppercase tracking-widest cursor-pointer">Logo</div>
-
           <div className="justify-self-end relative">
             <div className="flex items-center">
-              {/* Create Blog Button */}
-              <div
-                ref={sideCreatePanelRef}
-                className="border border-[#E0E0E0] bg rounded-4xl"
-              >
+              <div className="border border-[#E0E0E0] bg rounded-4xl">
                 <button
+                  onClick={() => dispatch(createBlog())}
                   className="px-3 py-2 rounded cursor-pointer hover:rounded-full hover:text-white hover:bg-black transition-all flex items-center gap-2 text-xs font-[500]"
-                  onClick={() => {
-                    setShowCreate(null);
-                    setTimeout(() => {
-                      setEditBlog(null);
-                      setMode("create");
-                      setToastMode("create");
-                      setShowCreate("side");
-                    }, 300);
-                  }}
                 >
                   <div className="flex items-center">
                     <i className="fa-regular fa-plus text-[10px]"></i>
@@ -108,20 +79,14 @@ const Navbar = ({
                   <p>Create Blog</p>
                 </button>
               </div>
-
-              {/* Profile Button */}
-              <div ref={sidePanelRef}>
+              <div>
                 <button
                   className="px-4 py-3 cursor-pointer rounded transition-all"
-                  onClick={() =>
-                    setShowProfile(showProfile === "side" ? null : "side")
-                  }
+                  onClick={() => setShowProfile((prev) => !prev)}
                 >
                   <i className="fa-regular fa-user"></i>
                 </button>
               </div>
-
-              {/* Mobile Menu (hamburger) */}
               <div className="block md:hidden">
                 <button className="block md:hidden">
                   <i className="fa-solid fa-bars"></i>
@@ -132,10 +97,17 @@ const Navbar = ({
         </nav>
       </header>
 
-      {/* Background Overlay */}
-      {showCreate && (
-        <div className="fixed top-0 left-0 w-full h-full bg-gray-200/50 backdrop-blur-sm z-80"></div>
-      )}
+      {/* Create Blog Panel */}
+      <div
+        ref={panelRef}
+        className={`fixed top-0 right-0 left-0 max-w-xl px-12 py-10 h-screen bg-white border border-[#E0E0E0] transform transition-all duration-300 ease-out ${
+          showCreate ? "translate-x-0 z-90" : "-translate-x-full z-80"
+        }`}
+      >
+        <div className="w-full">
+          <BlogForm mode={mode as "create" | "edit"} />
+        </div>
+      </div>
 
       {/* Profile Dropdown Panel */}
       <div
@@ -158,25 +130,6 @@ const Navbar = ({
             Logout
           </li>
         </ul>
-      </div>
-
-      {/* Create Blog Panel */}
-      <div
-        ref={sideCreate2PanelRef}
-        className={`fixed top-0 right-0 left-0 max-w-xl px-12 py-10 h-screen bg-white border border-[#E0E0E0] transform transition-all duration-300 ease-out ${
-          showCreate ? "translate-x-0 z-90" : "-translate-x-full z-80"
-        }`}
-      >
-        <div className="w-full">
-          <BlogForm
-            mode={mode}
-            initialData={editBlog || {}}
-            onSubmit={(data) => {
-              onSubmitBlog(data);
-            }}
-            onCancel={onCancel}
-          />
-        </div>
       </div>
     </>
   );
